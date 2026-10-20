@@ -32,7 +32,9 @@ apt_install \
     libpng-dev \
     libtiff5-dev \
     libjpeg-dev \
-    unixodbc-dev
+    unixodbc-dev \
+    libuv1-dev \
+    xz-utils
 
 install2.r --error --skipinstalled -n "$NCPUS" \
     tidyverse \

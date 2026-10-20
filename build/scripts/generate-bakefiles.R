@@ -128,87 +128,6 @@ write_main_bakefile <- function(..., bakefile_template, path_template) {
   )
 }
 
-
-write_extra_bakefile <- function(..., bakefile_template, path_template) {
-  dots <- rlang::list2(...)
-  bake_json_content <- glue::glue_data(
-    dots,
-    bakefile_template,
-    .open = "{{",
-    .close = "}}",
-    .trim = FALSE
-  ) |>
-    jsonlite::fromJSON(simplifyVector = FALSE)
-
-  generate_versioned_tags <- function(base_name) {
-    generate_tags(
-      base_name,
-      r_version = dots$r_version,
-      r_minor_latest = dots$r_minor_latest,
-      r_major_latest = dots$r_major_latest
-    ) |>
-      as.list()
-  }
-
-  # Update labels, tags
-  # TODO: Do not repeat these
-  ## binder
-  bake_json_content$target$binder$labels <- c(
-    bake_json_content$target$binder$labels,
-    default_labels
-  )
-  bake_json_content$target$binder$tags <- c("docker.io/rocker/binder", "ghcr.io/rocker-org/binder") |>
-    generate_versioned_tags()
-  bake_json_content$target$binder$`cache-from` <- bake_json_content$target$binder$tags
-
-  ## cuda
-  bake_json_content$target$`cuda`$labels <- c(
-    bake_json_content$target$`cuda`$labels,
-    default_labels
-  )
-  bake_json_content$target$`cuda`$tags <- c("docker.io/rocker/cuda", "ghcr.io/rocker-org/cuda") |>
-    generate_versioned_tags()
-
-  ## ml
-  bake_json_content$target$ml$labels <- c(
-    bake_json_content$target$ml$labels,
-    default_labels
-  )
-  bake_json_content$target$ml$tags <- c("docker.io/rocker/ml", "ghcr.io/rocker-org/ml") |>
-    generate_versioned_tags()
-
-  ## ml-verse
-  bake_json_content$target$`ml-verse`$labels <- c(
-    bake_json_content$target$`ml-verse`$labels,
-    default_labels
-  )
-  bake_json_content$target$`ml-verse`$tags <- c("docker.io/rocker/ml-verse", "ghcr.io/rocker-org/ml-verse") |>
-    generate_versioned_tags()
-
-  # Update cache-from
-  bake_json_content$target$`cuda`$`cache-from` <-
-    bake_json_content$target$ml$`cache-from` <-
-    bake_json_content$target$`ml-verse`$`cache-from` <-
-    c(
-      bake_json_content$target$`cuda`$tags,
-      bake_json_content$target$ml$tags,
-      bake_json_content$target$`ml-verse`$tags
-    )
-
-  jsonlite::write_json(
-    bake_json_content,
-    path = glue::glue_data(
-      dots,
-      path_template,
-      .open = "{{",
-      .close = "}}"
-    ),
-    pretty = TRUE,
-    auto_unbox = TRUE
-  )
-}
-
-
 write_experimental_bakefile <- function(..., bakefile_template, path_template) {
   dots <- rlang::list2(...)
 
@@ -292,19 +211,6 @@ df_args |>
         ...,
         bakefile_template = readr::read_file("build/templates/bakefiles/main.docker-bake.json"),
         path_template = "bakefiles/{{r_version}}.docker-bake.json"
-      )
-    }
-  )
-
-
-# binder and cuda bake files
-df_args |>
-  purrr::pwalk(
-    \(...) {
-      write_extra_bakefile(
-        ...,
-        bakefile_template = readr::read_file("build/templates/bakefiles/extra.docker-bake.json"),
-        path_template = "bakefiles/{{r_version}}.extra.docker-bake.json"
       )
     }
   )

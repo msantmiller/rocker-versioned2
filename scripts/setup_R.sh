@@ -30,11 +30,6 @@ function apt_install() {
 ##  mechanism to force source installs if we're using RSPM
 CRAN_SOURCE=${CRAN/"__linux__/${UBUNTU_CODENAME}/"/""}
 
-## source install if using RSPM and arm64 image
-if [ "$ARCH" = "aarch64" ]; then
-    CRAN=$CRAN_SOURCE
-fi
-
 ## Add a default CRAN mirror
 echo "options(repos = c(CRAN = '${CRAN}'), download.file.method = 'libcurl')" >>"${R_HOME}/etc/Rprofile.site"
 
@@ -58,6 +53,7 @@ if [ ! -x "$(command -v r)" ]; then
         liblzma-dev \
         libbz2-dev \
         zlib1g-dev \
+        libzstd-dev \
         libicu-dev"
 
     if [ "$(find /var/lib/apt/lists/* | wc -l)" = "0" ]; then
